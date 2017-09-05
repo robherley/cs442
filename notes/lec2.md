@@ -1,4 +1,4 @@
-# Lecture 2
+# CS 442 - Lecture 2
 
 ### Steps in Database Design
 
