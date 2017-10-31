@@ -1,0 +1,134 @@
+\documentclass{article}
+\usepackage{amsmath}
+\usepackage{minted}
+\usemintedstyle{manni}
+
+\begin{document}
+
+\title{CS-442 Homework 2}
+\author{Rob Herley}
+
+\maketitle
+
+\begin{center}
+I pledge my honor that I abided by the Stevens Honor System
+\end{center}
+
+\section{Part I}
+\subsection{}
+Return the name of guests who have booked a hotel room in NYC in January 2017 (tips: "January 2017' = "Jan01, 2017 to Jan31, 2017").
+$$\rho(AllJoins,\  Guest\bowtie Hotel\bowtie Room\bowtie Booking) $$
+$$\pi _{ gName }(\sigma _{ fromDate<='Jan01'\  \wedge \  fromDate>='Jan31'\  \wedge \  year=2017\  \wedge \  city='NYC' }(AllJoins))$$
+
+\subsection{}
+Return the name of guests who have booked a hotel room of type ''suite'' in NYC for longer than 10 days.
+$$\pi _{ gName }(\sigma _{ type='suite'\ \wedge \ hCity='NYC'\ \wedge \ noOfDays>10 }(Guest\bowtie Hotel\bowtie Room\bowtie Booking))$$
+
+\subsection{}
+Return the name of guests who never booked a hotel room for longer than 5 days.
+$$\rho (AllGuests,\ \pi_{gId, gName}(Guest))$$
+$$\rho (FiveDays,\ \pi_{gId, gName}(\sigma _{ noOfDays > 5 }(Guest \bowtie Booking)))$$
+$$\pi_{gName}(AllGuests - FiveDays)$$
+
+\subsection{}
+Return the IDs of the hotels located in NYC which were not booked at all in the year 2017.
+$$\pi_{hId}(\sigma_{hCity='NYC'}(Hotel))-\pi_{hId}(\sigma_{year=2017}(Booking))$$
+
+\subsection{}
+Return the ids of the guests who have booked at least one room of type ''suite'' in every hotel located in NYC.
+$$\rho(NYCHotels, \ \pi_{hId}(\sigma_{hCity='NYC'}(Hotel)))$$
+$$\pi_{gId}((Guest\bowtie(\sigma_{type='suite'}(Room)\bowtie Booking) \bowtie NYCHotels) / NYCHotels)$$
+
+\section{Part II}
+\subsection{}
+Find the name and age of all employees who work in both Hardware and Software departments.
+\begin{minted}{sql}
+    SELECT E.name, E.age
+    FROM Emp E, Works W, Dept D
+    WHERE E.eid = W.eid AND D.did = W.did AND D.did='Hardware'
+    INTERSECT (   
+        SELECT E.name, E.age
+        FROM Emp E, Works W, Dept D
+        WHERE E.eid = W.eid AND D.did = W.did AND D.did='Software'
+    )
+\end{minted}
+
+\subsection{}
+Find the id of managers who control the largest total amount of budget (note: each manager may manage multiple departments).
+\begin{minted}{sql}
+    SELECT DISTINCT D.managerid
+    FROM Dept D
+    EXCEPT
+    SELECT DISTINCT D2.managerid
+    FROM Dept D2, Dept D3
+    GROUP BY D2.managerid, D3.managerid
+    HAVING SUM(D2.budget) > SUM(D3.budget)
+\end{minted}
+
+\subsection{}
+Find the id of the managers who manage only the departments of budget that is at least 1 million dollars.
+\begin{minted}{sql}
+    SELECT D.managerid
+    FROM Dept D
+    GROUP BY D.managerid 
+    HAVING EVERY(D.budget >= 1000000)
+\end{minted}
+
+\subsection{}
+Find the name of all employees whose salary exceeds the budget of all the departments that the employee works in.
+\begin{minted}{sql}
+    SELECT E.ename
+    FROM Emp E
+    WHERE E.salary > ALL(
+        SELECT D.budget 
+        FROM Dept D, Works W 
+        WHERE D.did = W.did AND E.eid = W.eid
+    )
+\end{minted}
+
+\subsection{}
+Find the name of managers who manage the department of the largest budgets.
+\begin{minted}{sql}
+    SELECT DISTINCT E.ename
+    FROM Emp E, Works W, Dept D
+    WHERE D.did = W.did AND E.eid = W.eid AND D.budget = (
+        SELECT MAX(D1.budget)
+        FROM Dept D1
+    )
+\end{minted}
+
+\section{Part III}
+\subsection{Relational Algebra}
+\subsubsection{}
+Return the id, addresses, asking\_price, and selling\_price of all houses that are sold at price less than the asking price.
+$$\pi_{id,address,asking\_price,selling\_price}(\sigma_{selling\_price < asking\_price}(Sold \bowtie_{Sold.house\_id=House.id}House))$$
+\subsubsection{}
+Return the names of all of (prospective) buyers who have not bought a house.
+$$\pi_{name}(Buyer)-\pi_{name}(Buyer \bowtie_{Buyer.id=Sold.buyer\_id}Sold)$$
+
+\newpage
+
+\subsection{SQL Queries}
+\subsubsection{}
+For each postal code in which there were at least three houses sold, find the postal code and the  average selling price of houses in that postal code.
+\begin{minted}{sql}
+    SELECT H.postal_code, AVG(S.selling_price)
+    FROM House H, Sold S
+    WHERE S.house_id = H.id
+    GROUP BY H.postal_code
+    HAVING COUNT(*) >= 3
+\end{minted}
+
+\subsubsection{}
+Find the addresses and asking prices of all houses that have at least 4 bedrooms and 2 bathrooms that have not been sold. Each (address, asking price) pair should appear only once.
+\begin{minted}{sql}
+    SELECT DISTINCT H.address, H.asking_price
+    FROM House H
+    WHERE H.beds >= 4 AND H.baths >= 2 AND NOT EXISTS (
+        SELECT *
+        FROM Sold S
+        WHERE S.house_id = H.id
+    )
+\end{minted}
+
+\end{document}
