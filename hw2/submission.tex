@@ -18,7 +18,7 @@ I pledge my honor that I abided by the Stevens Honor System
 \subsection{}
 Return the name of guests who have booked a hotel room in NYC in January 2017 (tips: "January 2017' = "Jan01, 2017 to Jan31, 2017").
 $$\rho(AllJoins,\  Guest\bowtie Hotel\bowtie Room\bowtie Booking) $$
-$$\pi _{ gName }(\sigma _{ fromDate<='Jan01'\  \wedge \  fromDate>='Jan31'\  \wedge \  year=2017\  \wedge \  city='NYC' }(AllJoins))$$
+$$\pi _{ gName }(\sigma _{ fromDate>='Jan01'\  \wedge \  fromDate<='Jan31'\  \wedge \  year=2017\  \wedge \  city='NYC' }(AllJoins))$$
 
 \subsection{}
 Return the name of guests who have booked a hotel room of type ''suite'' in NYC for longer than 10 days.
@@ -46,10 +46,10 @@ Find the name and age of all employees who work in both Hardware and Software de
     SELECT E.name, E.age
     FROM Emp E, Works W, Dept D
     WHERE E.eid = W.eid AND D.did = W.did AND D.did='Hardware'
-    INTERSECT (   
-        SELECT E.name, E.age
-        FROM Emp E, Works W, Dept D
-        WHERE E.eid = W.eid AND D.did = W.did AND D.did='Software'
+    AND E.eid IN(   
+        SELECT E1.eid
+        FROM Emp E1, Works W, Dept D
+        WHERE E1.eid = W.eid AND D.did = W.did AND D.did='Software'
     )
 \end{minted}
 
@@ -58,7 +58,7 @@ Find the id of managers who control the largest total amount of budget (note: ea
 \begin{minted}{sql}
     SELECT DISTINCT D.managerid
     FROM Dept D
-    EXCEPT
+    WHERE D.managerid NOT IN (
     SELECT DISTINCT D2.managerid
     FROM Dept D2, Dept D3
     GROUP BY D2.managerid, D3.managerid

@@ -1,0 +1,13 @@
+apply plugin: 'java'
+apply plugin: 'application'
+
+mainClassName = 'main.java.lab.Assignment'
+
+jar {
+    baseName = 'cs442-lab'
+    version =  '1.0.0'
+}
+
+dependencies {
+    compile files('lib/mysql-connector-java.jar')
+}
