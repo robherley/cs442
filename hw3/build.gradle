@@ -1,0 +1,13 @@
+apply plugin: 'java'
+apply plugin: 'application'
+
+mainClassName = 'hw3.Assignment'
+
+jar {
+    baseName = 'cs442-hw3'
+    version =  '1.0.0'
+}
+
+dependencies {
+    compile files('lib/mysql-connector-java.jar')
+}
